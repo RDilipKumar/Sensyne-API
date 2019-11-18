@@ -82,6 +82,7 @@
     "selenium-standalone": "^6.15.4",
     "uuid": "^3.3.2",
     "wdio-cucumber-framework": "^2.2.8",
+    "wdio-docker-service": "^2.1.4",
     "wdio-multiple-cucumber-html-reporter": "^1.1.1",
     "wdio-sauce-service": "^0.4.13",
     "wdio-screenshot": "^0.6.0",

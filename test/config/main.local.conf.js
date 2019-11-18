@@ -46,7 +46,7 @@ exports.config = {
   connectionRetryCount: 3, // Default request retries count
 
   
-  services: ['selenium-standalone'],
+  services: ['selenium-standalone','docker'],
   framework: 'cucumber',
   reporters: ['spec', 'json', 'multiple-cucumber-html', 'junit'],
 
@@ -76,7 +76,21 @@ exports.config = {
     tagsInTitle: false, // <boolean> add cucumber tags to feature or scenario name
     snippetSyntax: undefined, // <string> specify a custom snippet syntax
   },
-
+  
+  dockerOptions: {
+    image: 'selenium/standalone-chrome',
+    healthCheck: 'http://localhost:4444',
+    options: {
+        p: ['4444:4444'],
+        shmSize: '2g'
+    }
+  },
+  healthCheck: {
+    url: 'http://localhost:4444',
+    maxRetries: 3,
+    inspectInterval: 1000,
+    startDelay: 2000
+  },
   logLevel: checkInProcessArgs('--loglevel') || 'silent',
   //
   // =====
@@ -107,6 +121,7 @@ exports.config = {
   beforeScenario: function(scenario) {
     console.log('------------------------------------------------------');
     console.log('SCENARIO NAME:' + scenario.name);
+    browser.pause(2000);
   },
 
   afterStep: function(step) {

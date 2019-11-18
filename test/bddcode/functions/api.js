@@ -1,8 +1,10 @@
 import { AssertionError } from 'assert';
+import { resolve } from 'path';
 
 const axios = require('axios');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-let apiResponse;
+let actualStatusCode;
+
 class api {
 
   apiURL = "http://localhost:5000/v1";
@@ -17,128 +19,87 @@ class api {
     const { productRequestBody, statusCode } = {
       ...options,
     };
-    console.log(productRequestBody);
-    try {
-     apiResponse = await axios.post(this.addProductEndpoint, productRequestBody)
-    } catch(error) {
-        apiResponse = error.response;
-      } finally {
-        console.log("Response status code is : ", apiResponse.status);
-        if (statusCode != null){
-          assert.equal(statusCode, apiResponse.status);
-        }
-      }
+    return await axios.post(this.addProductEndpoint, productRequestBody)
+      .then(function(response) {
+        console.log("Res", response.status);
+        actualStatusCode = response.status
+      })
+      .catch(function(error) {
+        actualStatusCode = error.response.status;
+      })
+      .then(function(){
+        assert.equal(statusCode, actualStatusCode);
+      });
     }
 
     async addProductDuplicateKey() {
-      try {
-       apiResponse = await axios.post(this.addProductEndpoint, {"name": "A2","name": "Dark Chocolate","price": 14.28})
-      } catch(error) {
-          apiResponse = error.response;
-        } finally {
-          console.log("Response status code is : ", apiResponse.status);
-            assert.equal(400, apiResponse.status);
-        }
+       return await axios.post(this.addProductEndpoint, {"name": "A2","name": "Dark Chocolate","price": 14.28})
+        .then(function(response) {
+          actualStatusCode = response.status
+        })
+        .catch(function(error) {
+          actualStatusCode = error.response.status;
+        })
+        .then(function(){
+          assert.equal(400, actualStatusCode);
+        });
       }
 
     async deleteAllProduct() {
-      try {
-        let deleteResponse;
-        apiResponse = await axios.get(this.getAllProductsEndpoint)
-        apiResponse.data.forEach(async (product) => {
-        deleteResponse = await axios.delete(this.deleteProductEndpoint + product.id);
-        assert.equal(200, deleteResponse.status);
-      });
-    } catch(error) {
-        apiResponse = error.response;
-    } finally {
-        assert.equal(200, apiResponse.status);
-      }
+        var deleteEndpoint = this.deleteProductEndpoint;
+        return await axios.get(this.getAllProductsEndpoint)
+        .then(function(response) {
+          response.data.forEach(async (product) => {
+            let deleteResponse = await axios.delete(deleteEndpoint+ product.id);
+            assert.equal(200, deleteResponse.status);
+          })
+        })
+        .catch(function(error) {
+          assert.equal(200, error.response.status);
+        })
+        .then(function(){
+          browser.pause(2000);
+        });;
     }
 
     async verifyProductInTheList(options = {}) {
-      try {
-        apiResponse = await axios.get(this.getAllProductsEndpoint)
-        let productFiltered = apiResponse.data.filter(product => (product.name == options.name));
-        assert.equal(productFiltered.length > 0, true);
-      }catch(error) {
-        apiResponse = error.response;
-      } finally {
-        assert.equal(200, apiResponse.status);
-      }
+        return await axios.get(this.getAllProductsEndpoint)
+        .then(function(response) {
+          let productFiltered = response.data.filter(product => (product.name == options.name));
+          assert.equal(productFiltered.length > 0, true);
+        })
+        .catch(function(error) {
+          assert.equal(200, error.response.status);
+        });
     }
 
-    async verifyProductInTheListWithProductCode(productCode,options = {}) {
-      try {
-        apiResponse = await axios.get(this.getSingleProductEndpoint + productCode); 
-      }catch(error) {
-        apiResponse = error.response;
-      } finally {
-        assert.equal(apiResponse.data.name, options.name);
-        assert.equal(200, apiResponse.status);
-      }
+    async verifyProductInTheListWithProductCode(productCode,options = {},statusCode) {
+        return await axios.get(this.getSingleProductEndpoint + productCode)
+        .then(function(response) {
+          console.log("Res", response.status);
+          assert.equal(response.data.name, options.name);
+          actualStatusCode = response.status
+        })
+        .catch(function(error) {
+          actualStatusCode = error.response.status;
+        })
+        .then(function(){
+          assert.equal(statusCode, actualStatusCode);
+        });
     }
 
     async updateProductInTheListWithProductCode(productCode,productRequestBody) {
-      try {
-        apiResponse = await axios.put(this.getSingleProductEndpoint + productCode, productRequestBody);
-      }catch(error) {
-        apiResponse = error.response;
-      } finally {
-        assert.equal(200, apiResponse.status);
+        return await axios.put(this.getSingleProductEndpoint + productCode, productRequestBody)
+        .then(function(response) {
+          actualStatusCode = response.status;
+        })
+        .catch(function(error) {
+          actualStatusCode = error.response.status;
+        })
+        .then(function(){
+          assert.equal(200, actualStatusCode);
+        });
       }
-    }
-
-
-  // addProduct(productRequestBody) {
-  //   console.log(productRequestBody);
-  //   return axios
-  //     .post(this.apiURL, productRequestBody)
-  //     .then(function(response) {
-  //       console.log("Response Status", response.status); //data.detail. status
-  //     })
-  //     .catch(function(error) {
-  //       console.log("Error status", error.response.data.status);
-  //     });
-  // }
-
-  async deleteStatus() {
-    await axios.delete(this.setPackagesEndpoint);
-  }
-
-  async performInstructCall(caseId) {
-    let instructCallURL = this.instructCallEndpoint + '/' + caseId;
-    console.log(instructCallURL);
-    await axios.get(instructCallURL);
-  }
-
-  async enactGetPackages() {
-    await axios.get(this.getPackagesEndpoint);
-  }
-
-  async setStubErrorConfig(endPoint, errorCode) {
-    this.setErrorConfig.Endpoint = endPoint;
-    this.setErrorConfig.StatusCode = errorCode;
-    return await axios
-      .post(this.setErrorConfigEndpoint, this.setErrorConfig)
-      .then(function(response) {
-        // console.log(response);
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-  }
-
-  async deleteStubErrorConfig() {
-    return await axios
-      .delete(this.deleteErrorConfigEndpoint)
-      .then(function(response) {
-        // console.log(response);
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-  }
 }
 
 export default new api();
