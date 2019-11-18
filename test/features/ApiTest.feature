@@ -2,7 +2,7 @@ Feature: API Testing
   Validate Post, Get, Put, Delete operations for the product
 
  Scenario: Validate add new product and its response status code 
-    Given I delete all the products 
+    Given I delete all the products
     Then I add a new product and returns status code "201"
 
 Scenario: Verify added product in the list and its status code

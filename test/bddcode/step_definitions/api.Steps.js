@@ -23,14 +23,14 @@ Then(/^I verify added product in the list$/, async function() {
 });
 
 Then(/^I verify added product in the list using product code "(.*)"$/, async function(productCode) {
-  await api.verifyProductInTheListWithProductCode(productCode,productRequestBody);
+  await api.verifyProductInTheListWithProductCode(productCode,productRequestBody,'200');
 });
 
 When(/^I update product in the list using product code "(.*)" and verify in list$/, async function(productCode) {
   productRequestBody.name = "Lavender Heart";
   productRequestBody.price = 2.3;
-  await api.updateProductInTheListWithProductCode(productCode,productRequestBody);
-  await api.verifyProductInTheListWithProductCode(productCode,productRequestBody);
+  await api.updateProductInTheListWithProductCode(productCode,productRequestBody,'200');
+  await api.verifyProductInTheListWithProductCode(productCode,productRequestBody,'200');
 });
 
 When(/^I add a new product with duplicate key entries it should return status code "(.*)"$/, async function(statusCode) {
